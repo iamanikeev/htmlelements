@@ -142,7 +142,11 @@ public class Table extends TypifiedElement {
      * Returns list of maps where keys are table headings and values are table row elements ({@code <td>}).
      */
     public List<Map<String, WebElement>> getRowsMappedToHeadings() {
-        return getRowsMappedToHeadings(getHeadingsAsString());
+        List<List<WebElement>> rows = getRows();
+        return rows.stream()
+                .map(row -> row.stream()
+                        .collect(toMap(e -> getHeadingsAsString().get(row.indexOf(e)), identity())))
+                .collect(toList());
     }
 
     /**
@@ -151,10 +155,9 @@ public class Table extends TypifiedElement {
      * @param headings List containing strings to be used as table headings.
      */
     public List<Map<String, WebElement>> getRowsMappedToHeadings(List<String> headings) {
-        List<List<WebElement>> rows = getRows();
-        return rows.stream()
-                .map(row -> row.stream()
-                        .collect(toMap(e -> headings.get(row.indexOf(e)), identity())))
+        return getRowsMappedToHeadings().stream()
+                .map(e -> e.entrySet().stream().filter(m -> headings.contains(m.getKey()))
+                        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .collect(toList());
     }
 
@@ -162,7 +165,11 @@ public class Table extends TypifiedElement {
      * Same as {@link #getRowsMappedToHeadings()} but retrieves text from row elements ({@code <td>}).
      */
     public List<Map<String, String>> getRowsAsStringMappedToHeadings() {
-        return getRowsAsStringMappedToHeadings(getHeadingsAsString());
+        return getRowsMappedToHeadings().stream()
+                .map(m -> m.entrySet().stream()
+                        .collect(toMap(Map.Entry::getKey, e -> e.getValue().getText())))
+                .collect(toList());
+
     }
 
     /**
